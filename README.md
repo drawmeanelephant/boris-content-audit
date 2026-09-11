@@ -12,35 +12,49 @@ records, and never injects instructions into archive pages.
 
 - **Not part of publication.** Findings never alter Boris graph semantics.
   Reports are generated projections of the source tree at audit time.
-- **Not wired into the root `zig build test` gate.** It builds and tests under
-  its own `build.zig`. The root repo exposes aggregate commands, see below.
+- **Its own home.** This repository is the tool's home. It builds and tests
+  under its own `build.zig`, has no Boris build dependency, and never imports
+  product modules. The Boris grammar it validates is pinned by release tag —
+  see [Boris pins](#boris-pins).
 - **No dependency** on JavaScript, Node, Astro, Starlight, MDX, or any
   network. It parses a small bounded frontmatter grammar of its own.
 - **Mode registry.** `--mode=poetry` is the only implemented mode. The CLI is
   designed so future audit modes can be registered, but none are implemented
   here.
 
+## Boris pins
+
+The audit validates source content against Boris's **closed** content grammar.
+Those contracts are owned by Boris and are **referenced by release tag, never
+copied** — a copy would drift, and the closed grammar has exactly one owner:
+
+| Reference | Pinned at |
+|---|---|
+| [Frontmatter grammar](https://github.com/drawmeanelephant/boris/blob/v0.8.2/docs/contracts/frontmatter.md) | Boris `v0.8.2` |
+| [Identity and paths](https://github.com/drawmeanelephant/boris/blob/v0.8.2/docs/contracts/identity-and-paths.md) | Boris `v0.8.2` |
+
+The tool has **no Boris build dependency**: it parses a bounded frontmatter
+grammar of its own that mirrors those rules (see
+[`src/frontmatter.zig`](src/frontmatter.zig)), and it never imports or spawns
+Boris. The pins name the Boris release whose grammar those rules were last
+reconciled with; bump them in the same change that adopts a newer grammar, and
+keep [`src/cli.zig`](src/cli.zig)'s tool id in lockstep with the pinned
+release.
+
 ## Build and test
 
-From the Boris repository root:
+Requires Zig **0.16** and nothing else — no Node, no package manager, no
+network at build or run time.
 
 ```sh
-zig build --build-file tools/content-audit/build.zig
-zig build --build-file tools/content-audit/build.zig test
-```
-
-From inside `tools/content-audit/` the same commands work without the
-`--build-file` flag. Root-level aggregate commands:
-
-```sh
-zig build content-audit          # build boris-content-audit
-zig build test-content-audit     # run its unit + fixture tests
+zig build            # builds zig-out/bin/boris-content-audit
+zig build test       # unit + fixture tests
 ```
 
 Run against a project:
 
 ```sh
-zig build --build-file tools/content-audit/build.zig run -- \
+zig build run -- \
   --mode=poetry \
   --root=/path/to/project \
   --content-root=content \
@@ -145,7 +159,7 @@ Field semantics:
 - `exact_mappings` — policy-supplied exact mapping table keyed by canonical
   IDs (poetry id → source id).
 
-`tools/content-audit/fixtures/policy.example.json` ships the example shape.
+`fixtures/policy.example.json` ships the example shape.
 
 ## Identity and mapping
 

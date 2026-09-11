@@ -1,0 +1,7 @@
+# Zig build outputs and test scratch. The tool never writes into the source
+# tree: audit output requires an explicit --out directory, and the test suite
+# stages everything under .zig-cache/tmp/.
+.zig-cache/
+.zig-global-cache/
+zig-cache/
+zig-out/

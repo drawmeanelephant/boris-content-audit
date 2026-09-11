@@ -2,10 +2,11 @@ const std = @import("std");
 
 /// Standalone deterministic source-content audit tool (`boris-content-audit`).
 ///
-/// Not part of the Boris product compiler, not wired into the root
-/// `zig build test` gate, and never imports product `src/` modules.
+/// This repository is the tool's home: it has no Boris build dependency and
+/// never imports product modules. The closed frontmatter and identity grammar
+/// it validates is referenced by Boris release tag in the README, never copied.
 /// The tool parses a small bounded frontmatter grammar of its own
-/// (documented in `docs/poetry-shapes.md` and the tool README).
+/// (documented in `docs/poetry-shapes.md` and the README).
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});

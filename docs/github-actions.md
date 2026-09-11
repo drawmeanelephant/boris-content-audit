@@ -8,8 +8,8 @@ CI. This document shows a workflow for a consumer repository.
 
 1. Checks out the consumer content repository.
 2. Acquires a pinned `boris-content-audit` binary by **building it from a
-   pinned Boris source checkout** (the default path below), or by downloading
-   a pinned, verified binary kit.
+   pinned checkout of this repository** (the default path below), or by
+   downloading a pinned, verified binary kit published from this repository.
 3. Runs the poetry audit into a temporary output directory (never into the
    content tree), **capturing the exit status** so findings never lose the
    report.
@@ -26,12 +26,13 @@ CI. This document shows a workflow for a consumer repository.
 
 ## Acquisition paths
 
-**Path A (recommended): build from a pinned Boris checkout.**
+**Path A (recommended): build from a pinned checkout of this repository.**
 
-Pin the exact Boris source revision the content was audited against, check it
-out, build the standalone tool, and copy the binary to `PATH`. Pinning both
-the checkout revision and the Zig toolchain version keeps the consumer audit
-reproducible.
+Pin the exact tag of `boris-content-audit`, check it out, build it, and copy
+the binary to `PATH`. Pinning both the tool tag and the Zig toolchain version
+keeps the consumer audit reproducible. No Boris checkout is needed: the tool
+has no Boris build dependency, and the grammar it validates is pinned by tag
+in [the README](README.md#boris-pins).
 
 ```yaml
 - name: Install Zig (pinned)
@@ -39,26 +40,27 @@ reproducible.
   with:
     version: 0.16.0
 
-- name: Check out pinned Boris source
+- name: Check out pinned boris-content-audit
   uses: actions/checkout@v4
   with:
-    repository: drawmeanelephant/boris
-    ref: v0.8.2              # pin the audited Boris revision, not a moving branch
-    path: boris
+    repository: drawmeanelephant/boris-content-audit
+    ref: v0.8.2              # pin the tool tag, not a moving branch
+    path: content-audit
 
 - name: Build boris-content-audit from source
   run: |
-    zig build --build-file boris/tools/content-audit/build.zig
+    zig build --build-file content-audit/build.zig
     install -m 0755 \
-      boris/tools/content-audit/zig-out/bin/boris-content-audit \
+      content-audit/zig-out/bin/boris-content-audit \
       /usr/local/bin/boris-content-audit
 ```
 
-**Path B: download a pinned, verified binary kit.**
+**Path B: download a pinned, verified binary kit** (only when this repository
+publishes one).
 
-A release kit produced by `scripts/agent-pack.sh` (see
-`docs/AGENT-BINARY-KITS.md` in the Boris repository) carries the tool plus its
-content-addressed metadata. Download the artifact for the exact pinned release
+The tool ships as source today, so Path A is the supported acquisition. If a
+release kit is published from this repository, it carries the binary plus its
+content-addressed metadata; download the artifact for the exact pinned release
 and verify it before use:
 
 ```yaml
@@ -70,7 +72,7 @@ and verify it before use:
 
 - name: Verify and install binary kit
   run: |
-    # The kit contains the manifest and checksums produced by agent-pack.sh.
+    # The kit contains the manifest and checksums published with the release.
     shasum -a 256 -c /tmp/boris-kit/SHA256SUMS
     install -m 0755 /tmp/boris-kit/boris-content-audit /usr/local/bin/boris-content-audit
 ```
@@ -108,18 +110,18 @@ jobs:
         with:
           version: 0.16.0
 
-      - name: Check out pinned Boris source
+      - name: Check out pinned boris-content-audit
         uses: actions/checkout@v4
         with:
-          repository: drawmeanelephant/boris
+          repository: drawmeanelephant/boris-content-audit
           ref: v0.8.2
-          path: boris
+          path: content-audit
 
       - name: Build boris-content-audit from source
         run: |
-          zig build --build-file boris/tools/content-audit/build.zig
+          zig build --build-file content-audit/build.zig
           install -m 0755 \
-            boris/tools/content-audit/zig-out/bin/boris-content-audit \
+            content-audit/zig-out/bin/boris-content-audit \
             /usr/local/bin/boris-content-audit
 
       # ---- Audit with exit capture ----
@@ -201,18 +203,18 @@ jobs:
         with:
           version: 0.16.0
 
-      - name: Check out pinned Boris source
+      - name: Check out pinned boris-content-audit
         uses: actions/checkout@v4
         with:
-          repository: drawmeanelephant/boris
+          repository: drawmeanelephant/boris-content-audit
           ref: v0.8.2
-          path: boris
+          path: content-audit
 
       - name: Build boris-content-audit from source
         run: |
-          zig build --build-file boris/tools/content-audit/build.zig
+          zig build --build-file content-audit/build.zig
           install -m 0755 \
-            boris/tools/content-audit/zig-out/bin/boris-content-audit \
+            content-audit/zig-out/bin/boris-content-audit \
             /usr/local/bin/boris-content-audit
 
       - name: Run poetry audit
@@ -251,5 +253,7 @@ jobs:
   repository wants policy-level findings to fail CI.
 - The report site is static and self-contained; it can be served from
   `file://` or published to Pages without any build step.
+- The tool has no Boris build dependency. Only the grammar it validates is
+  pinned, by Boris release tag, in [the README](README.md#boris-pins).
 - Boris CI does **not** clone private or external dogfood repositories; this
   workflow lives in the consumer repository, not in Boris.

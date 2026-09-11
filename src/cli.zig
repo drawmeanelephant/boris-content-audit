@@ -6,8 +6,9 @@
 const std = @import("std");
 const util = @import("util.zig");
 
-/// Tool id printed by `--version`/`-V`. Kept in lockstep with the product
-/// release line (`pipeline.boris_version`); this tool does not import `src/`.
+/// Tool id printed by `--version`/`-V`. Kept in lockstep with the Boris
+/// release whose grammar this tool mirrors (see the README "Boris pins"); a
+/// pinned-id test enforces the lockstep, since this tool never imports `src/`.
 pub const tool_id = "boris-content-audit/0.8.2";
 
 pub const Mode = enum {
@@ -257,7 +258,7 @@ pub const help_text =
     \\     are reported as findings and can trigger exit 1)
     \\
     \\Examples:
-    \\  zig build --build-file tools/content-audit/build.zig run -- \
+    \\  zig build run -- \
     \\    --mode=poetry --root=/path/to/project --content-root=content \
     \\    --policy=/path/to/policy.json --out=/tmp/poetry-audit
     \\

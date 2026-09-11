@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# boris-content-audit is fully standalone: it has no Boris build dependency and
+# never imports product modules, so this lane needs only Zig. Both OSes run
+# unconditionally — the audit parser is a conformance surface of its own, and
+# its lane must never degrade into an unobserved skip.
+jobs:
+  content-audit-test:
+    name: content-audit-test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Format check
+        run: |
+          zig fmt --check build.zig
+          zig fmt --check src
+
+      - name: Build
+        run: zig build
+
+      - name: Version probe
+        run: ./zig-out/bin/boris-content-audit --version
+
+      - name: Unit + fixture tests
+        run: zig build test

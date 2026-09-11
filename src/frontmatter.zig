@@ -1,6 +1,6 @@
 //! Bounded frontmatter parser for boris-content-audit.
 //!
-//! Implements the small closed grammar from docs/contracts/frontmatter.md so
+//! Implements the small closed grammar from the Boris frontmatter contract (pinned in README.md) so
 //! the audit tool stays standalone (no import of product compiler modules):
 //!   - optional `---` fence at byte zero; fields are `key: value` one-liners
 //!   - closed key set: id, title, parent, status, tags, relations,
@@ -108,7 +108,7 @@ fn isFenceLine(line: []const u8) bool {
     return false;
 }
 
-/// Entity id / parent shape rules (docs/contracts/identity-and-paths.md):
+/// Entity id / parent shape rules (Boris identity-and-paths contract, pinned in README.md):
 /// never absolute, never `\`, never empty/`.`/`..` segments, and no
 /// URL-significant `#`, `?`, or `%`. Length is checked separately.
 fn validEntityIdShape(value: []const u8) bool {
@@ -521,7 +521,7 @@ test "crlf fences accepted" {
 // ---------------------------------------------------------------------------
 // Contract conformance matrix
 //
-// Mirrors docs/contracts/frontmatter.md rule-by-rule so the audit parser
+// Mirrors the Boris frontmatter contract rule-by-rule so the audit parser
 // cannot quietly become a second authoring dialect.
 // ---------------------------------------------------------------------------
 
